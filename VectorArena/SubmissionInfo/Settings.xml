@@ -1,0 +1,6 @@
+<MarketplaceDetails>
+  <SmallAppTile>SmallApplicationTile.png</SmallAppTile>
+  <LargeAppTile>LargeApplicationTile.png</LargeAppTile>
+  <PCAppTile>MarketplaceTile.png</PCAppTile>
+  <ScreenShots>VectorArenaTitleScreenshot.png;VectorArenaGameplayScreenshot.png;VectorArenaGameplayScreenshot2.png;;;;;;</ScreenShots>
+</MarketplaceDetails>
