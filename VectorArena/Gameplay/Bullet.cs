@@ -7,11 +7,6 @@ namespace VectorArena
     public class Bullet : Actor
     {
         public Ship Ship;
-        public ShipManager ShipManager;
-        public DroneManager DroneManager;
-        public MultiplierManager MultiplierManager;
-        public ParticleManager ParticleManager;
-        public AudioManager AudioManager;
 
         public const int Radius = 5;
         public const int Speed = 20;
@@ -22,7 +17,7 @@ namespace VectorArena
         static Color lineColor = new Color(1.0f, 1.0f, 0.5f, 1.0f);
         static Color lightColor = new Color(0.5f, 0.5f, 0.0f, 1.0f);
 
-        public Bullet(Actor parent) : base(parent)
+        public Bullet() : base()
         {
             Alive = false;
         }
@@ -37,7 +32,7 @@ namespace VectorArena
 
         public void Die()
         {
-            ParticleManager.CreateParticleEffect(explosionParticleCount, Position, explosionRadius, lineColor);
+            ((GameplayScene)Scene).ParticleManager.CreateParticleEffect(explosionParticleCount, Position, explosionRadius, lineColor);
 
             Alive = false;
         }
@@ -46,7 +41,7 @@ namespace VectorArena
         {
             if (Alive)
             {
-                foreach (Drone d in DroneManager.Drones)
+                foreach (Enemy d in ((GameplayScene)Scene).EnemyManager.Enemies)
                 {
                     if (d.Alive)
                     {
@@ -68,7 +63,7 @@ namespace VectorArena
             }
         }
 
-        public override void Update()
+        public override void Update(GameTimerEventArgs e)
         {
             if (Alive)
             {

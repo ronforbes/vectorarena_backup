@@ -8,27 +8,18 @@ namespace VectorArena
     {
         public List<Multiplier> Multipliers;
 
-        public MultiplierManager(int multiplierCapacity) : base(null)
+        public MultiplierManager(int multiplierCapacity) : base()
         {
             Multipliers = new List<Multiplier>(multiplierCapacity);
-
-            for (int i = 0; i < Multipliers.Capacity; i++)
-            {
-                Multiplier m = new Multiplier(this);
-                Multipliers.Add(m);
-                AddChild(m);
-            }
         }
 
-        public void Initialize(ref ShipManager shipManager, ref DroneManager droneManager, ref BulletManager bulletManager, ref ParticleManager particleManager, ref AudioManager audioManager)
+        public void CreateMultipliers()
         {
-            foreach (Multiplier m in Multipliers)
+            for (int i = 0; i < Multipliers.Capacity; i++)
             {
-                m.ShipManager = shipManager;
-                m.DroneManager = droneManager;
-                m.BulletManager = bulletManager;
-                m.ParticleManager = particleManager;
-                m.AudioManager = audioManager;
+                Multiplier m = new Multiplier();
+                Multipliers.Add(m);
+                AddChild(m);
             }
         }
 
@@ -56,14 +47,14 @@ namespace VectorArena
             }
         }
 
-        public override void Update()
+        public override void Update(GameTimerEventArgs e)
         {
             foreach (Multiplier m in Multipliers)
             {
                 m.HandleCollisions();
             }
 
-            base.Update();
+            base.Update(e);
         }
     }
 }

@@ -8,31 +8,22 @@ namespace VectorArena
     {
         public List<Bullet> Bullets;
 
-        public BulletManager(int bulletCapacity) : base(null)
+        public BulletManager(int bulletCapacity) : base()
         {
             Bullets = new List<Bullet>(bulletCapacity);
+        }
 
+        public void CreateBullets()
+        {
             for (int i = 0; i < Bullets.Capacity; i++)
             {
-                Bullet b = new Bullet(this);
+                Bullet b = new Bullet();
                 Bullets.Add(b);
                 AddChild(b);
             }
         }
 
-        public void Initialize(ref ShipManager shipManager, ref DroneManager droneManager, ref MultiplierManager multiplierManager, ref ParticleManager particleManager, ref AudioManager audioManager)
-        {
-            foreach (Bullet b in Bullets)
-            {
-                b.ShipManager = shipManager;
-                b.DroneManager = droneManager;
-                b.MultiplierManager = multiplierManager;
-                b.ParticleManager = particleManager;
-                b.AudioManager = audioManager;
-            }
-        }
-
-        public void CreateBullet(ref Ship ship, Vector2 position, Vector2 velocity)
+        public void SpawnBullet(ref Ship ship, Vector2 position, Vector2 velocity)
         {
             for (int i = 0; i < Bullets.Capacity; i++)
             {
@@ -44,14 +35,14 @@ namespace VectorArena
             }
         }
 
-        public override void Update()
+        public override void Update(GameTimerEventArgs e)
         {
             foreach (Bullet b in Bullets)
             {
                 b.HandleCollisions();
             }
 
-            base.Update();
+            base.Update(e);
         }
 
         public override void Draw(Camera3D camera)

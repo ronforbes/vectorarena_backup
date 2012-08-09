@@ -1,21 +1,29 @@
 ﻿using System;
+using System.Runtime.Serialization;
 using Microsoft.Xna.Framework;
 using Omega;
 
 namespace VectorArena
 {
+    [DataContract]
     public class Starfield : Actor
     {
         Random random;
+
+        [DataMember]
         Vector3[] points;
+
+        [DataMember]
         int[] sizes;
+
+        [DataMember]
         float[] brightnesses;
 
         const float starRadius = 5.0f;
         const int starCount = 1000;
         BoundingBox bounds = new BoundingBox(new Vector3(-1000, -1000, -1000), new Vector3(1000, 1000, -500));
 
-        public Starfield() : base(null)
+        public Starfield() : base()
         {
             random = new Random();
 
@@ -33,7 +41,7 @@ namespace VectorArena
             }
         }
 
-        public override void Update() { }
+        public override void Update(GameTimerEventArgs e) { }
 
         public override void Draw(Camera3D camera)
         {

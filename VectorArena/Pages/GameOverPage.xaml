@@ -24,8 +24,23 @@
         </Grid.RowDefinitions>
         
         <TextBlock Grid.Row="0" Text="Game Over" FontFamily="Segoe WP Light" Foreground="White" FontSize="125" HorizontalAlignment="Center"/>
-        <TextBlock Grid.Row="1" Text="Score:" FontFamily="Segoe WP SemiLight" Foreground="White" FontSize="50" HorizontalAlignment="Center"/>
-        <TextBlock x:Name="Score" Grid.Row="2" HorizontalAlignment="Center" Foreground="White" FontFamily="Segoe WP Bold" FontSize="100" VerticalAlignment="Center"/>
+        <TextBlock x:Name ="Score" Grid.Row="1" Text="Score:" FontFamily="Segoe WP SemiLight" Foreground="White" FontSize="50" HorizontalAlignment="Center"/>
+        <ListBox x:Name="Leaderboard" Grid.Row="2">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding Path=Rank}" FontSize="30"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Path=Date}" FontSize="30"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Path=Score}" FontSize="30"/>
+                    </Grid>        
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <Button x:Name="ContinueButton" Grid.Row="3" Content="Continue" BorderBrush="White" Foreground="White" Click="ContinueButton_Click"/>
     </Grid>
 </phone:PhoneApplicationPage>

@@ -7,12 +7,6 @@ namespace VectorArena
 {
     public class Multiplier : Actor
     {
-        public ShipManager ShipManager;
-        public DroneManager DroneManager;
-        public BulletManager BulletManager;
-        public ParticleManager ParticleManager;
-        public AudioManager AudioManager;
-
         int Life;
 
         List<Vector3> vertices;
@@ -22,7 +16,7 @@ namespace VectorArena
         static Color lineColor = new Color(0.5f, 1.0f, 0.5f, 1.0f);
         static Color lightColor = new Color(0.0f, 0.5f, 0.0f, 1.0f);
 
-        public Multiplier(Actor parent) : base(parent)
+        public Multiplier() : base()
         {
             vertices = new List<Vector3>();
             vertices.Add(new Vector3(0.0f, 5.0f, -500.0f));
@@ -54,7 +48,7 @@ namespace VectorArena
         {
             if (Alive)
             {
-                foreach (Ship s in ShipManager.Ships)
+                foreach (Ship s in ((GameplayScene)Scene).ShipManager.Ships)
                 {
                     if (Math.Abs((Position - s.Position).Length()) <= Radius + s.Radius * 5)
                     {
@@ -79,7 +73,7 @@ namespace VectorArena
             }
         }
 
-        public override void Update()
+        public override void Update(GameTimerEventArgs e)
         {
             if (Alive)
             {

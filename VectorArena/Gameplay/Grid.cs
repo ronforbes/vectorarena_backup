@@ -14,7 +14,7 @@ namespace VectorArena
 
         BoundingBox bounds = new BoundingBox(new Vector3(-500, -500, -500), new Vector3(500, 500, -500));
 
-        public Grid() : base(null)
+        public Grid() : base()
         {
             startPoints = new List<Vector3>();
             endPoints = new List<Vector3>();
@@ -75,7 +75,7 @@ namespace VectorArena
             }
         }
 
-        public override void Update() { }
+        public override void Update(GameTimerEventArgs e) { }
 
         public override void Draw(Camera3D camera)
         {

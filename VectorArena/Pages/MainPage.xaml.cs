@@ -15,11 +15,10 @@ namespace VectorArena
         GraphicsDevice graphicsDevice;
         ContentManager contentManager;
         GameTimer timer;
-        Scene scene;
-        ParticleManager particleManager;
+        MainMenuScene scene;
+        
         AudioManager audioManager;
-        Random random;
-        int particleEffectDelay;
+        
         UIElementRenderer elementRenderer;
         SpriteBatch spriteBatch;
         Settings settings;
@@ -33,8 +32,6 @@ namespace VectorArena
 
             // Get the content manager from the application
             contentManager = (Application.Current as App).Content;
-
-            particleEffectDelay = 0;
 
             // Create a timer for this page
             timer = new GameTimer();
@@ -70,10 +67,6 @@ namespace VectorArena
                 return;
             }
 
-            // dispose the current renderer
-            //if (elementRenderer != null)
-            //    elementRenderer.Dispose();
-
             if (null == elementRenderer)
             {
                 if (ActualHeight > ActualWidth)
@@ -92,20 +85,11 @@ namespace VectorArena
 
             graphicsDevice.BlendState = BlendState.Additive;
 
-            particleManager = new ParticleManager(10000);
-
             audioManager = (Application.Current as App).AudioManager;
 
-            scene = new Scene(graphicsDevice);
-            scene.AddActor(new Starfield());
-            scene.AddActor(new Grid());
-            scene.AddActor(particleManager);
-            scene.AddActor(audioManager);
-            scene.AddPostprocess(new Bloom(new SpriteBatch(graphicsDevice), graphicsDevice));
+            scene = new MainMenuScene(graphicsDevice, audioManager);
             scene.LoadContent(contentManager);
-
-            random = new Random();
-
+            
             // Start the timer
             timer.Start();
 
@@ -125,15 +109,7 @@ namespace VectorArena
 
         private void OnUpdate(object sender, GameTimerEventArgs e)
         {
-            scene.Update();
-
-            if (particleEffectDelay++ >= 1)
-            {
-                particleEffectDelay = 0;
-                particleManager.CreateParticleEffect(25, new Vector3(random.Next(-400, 400), random.Next(-200, 200), random.Next(0, 0)), random.Next(50), new Color((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()));
-            }
-
-            audioManager.PlaySong("BasicDrumBeat", true);
+            scene.Update(e);
         }
 
         private void OnDraw(object sender, GameTimerEventArgs e)
@@ -166,6 +142,12 @@ namespace VectorArena
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             NavigationService.Navigate(new Uri("/Pages/SettingsPage.xaml", UriKind.Relative));
+        }
+
+        protected override void OnBackKeyPress(System.ComponentModel.CancelEventArgs e)
+        {
+            base.OnBackKeyPress(e);
+            NavigationService.Navigate(new Uri("/Pages/MainPage.xaml", UriKind.Relative));
         }
     }
 }

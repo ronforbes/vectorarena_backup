@@ -36,6 +36,7 @@ namespace VectorArena
         public Settings Settings;
         public AudioManager AudioManager;
         public int Score;
+        public Leaderboard Leaderboard;
 
         /// <summary>
         /// Constructor for the Application object.
@@ -184,6 +185,7 @@ namespace VectorArena
             AudioManager.LoadSong("ParticleFusion", Content);
             AudioManager.LoadSound("ClosedHihat", Content);
             AudioManager.LoadSound("Cymbal", Content);
+            Leaderboard = new Leaderboard();
         }
 
         // An event handler that pumps the FrameworkDispatcher each frame.

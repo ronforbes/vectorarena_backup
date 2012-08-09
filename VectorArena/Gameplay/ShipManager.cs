@@ -9,37 +9,28 @@ namespace VectorArena
         public List<Ship> Ships;
         public Ship PlayerShip;
 
-        public ShipManager(int shipCapacity) : base(null)
+        public ShipManager(int capacity) : base()
         {
-            Ships = new List<Ship>(shipCapacity);
+            Ships = new List<Ship>(capacity);
+        }
 
-            for(int i = 0; i < Ships.Capacity; i++)
+        public void CreateShips()
+        {
+            for (int i = 0; i < Ships.Capacity; i++)
             {
-                Ship s = new Ship(this);
+                Ship s = new Ship();
                 Ships.Add(s);
                 AddChild(s);
             }
         }
 
-        public void Initialize(ref DroneManager droneManager, ref BulletManager bulletManager, ref MultiplierManager multiplierManager, ref ParticleManager particleManager, ref AudioManager audioManager)
-        {
-            foreach (Ship s in Ships)
-            {
-                s.DroneManager = droneManager;
-                s.BulletManager = bulletManager;
-                s.MultiplierManager = multiplierManager;
-                s.ParticleManager = particleManager;
-                s.AudioManager = audioManager;
-            }
-        }
-
-        public void ActivateShip(bool playerShip, GamePage.GameType gameType)
+        public void ActivateShip(bool playerShip)
         {
             for (int i = 0; i < Ships.Capacity; i++)
             {
                 if (!Ships[i].Active)
                 {
-                    Ships[i].Activate(gameType);
+                    Ships[i].Activate();
                     if (playerShip)
                         PlayerShip = Ships[i];
                     Ships[i].Spawn();
@@ -48,7 +39,7 @@ namespace VectorArena
             }
         }
 
-        public override void Update()
+        public override void Update(GameTimerEventArgs e)
         {
             if (VirtualThumbsticks.LeftThumbstick.Length() > 0.0f)
                 PlayerShip.Thrust(VirtualThumbsticks.LeftThumbstick);
@@ -58,7 +49,7 @@ namespace VectorArena
             if (VirtualThumbsticks.RightThumbstick.Length() > 0.5f)
                 PlayerShip.Fire(ref PlayerShip, VirtualThumbsticks.RightThumbstick);
 
-            base.Update();
+            base.Update(e);
         }
     }   
 }

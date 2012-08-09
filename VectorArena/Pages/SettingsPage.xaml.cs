@@ -22,14 +22,11 @@ namespace VectorArena.Pages
         GraphicsDevice graphicsDevice;
         ContentManager contentManager;
         GameTimer timer;
-        Scene scene;
-        ParticleManager particleManager;
-        Random random;
-        int particleEffectDelay;
+        SubMenuScene scene;
+        AudioManager audioManager;
         UIElementRenderer elementRenderer;
         SpriteBatch spriteBatch;
         Settings settings;
-        AudioManager audioManager;
 
         public SettingsPage()
         {
@@ -42,8 +39,6 @@ namespace VectorArena.Pages
 
             // Get the content manager from the application
             contentManager = (Application.Current as App).Content;
-
-            particleEffectDelay = 0;
 
             // Create a timer for this page
             timer = new GameTimer();
@@ -97,16 +92,8 @@ namespace VectorArena.Pages
 
             graphicsDevice.BlendState = BlendState.Additive;
 
-            particleManager = new ParticleManager(10000);
-
-            scene = new Scene(graphicsDevice);
-            scene.AddActor(new Starfield());
-            scene.AddActor(new Grid());
-            scene.AddActor(particleManager);
-            scene.AddPostprocess(new Bloom(new SpriteBatch(graphicsDevice), graphicsDevice));
+            scene = new SubMenuScene(graphicsDevice);
             scene.LoadContent(contentManager);
-
-            random = new Random();
 
             // Start the timer
             timer.Start();
@@ -125,21 +112,9 @@ namespace VectorArena.Pages
             base.OnNavigatedFrom(e);
         }
 
-        protected override void OnBackKeyPress(System.ComponentModel.CancelEventArgs e)
-        {
-            base.OnBackKeyPress(e);
-            NavigationService.Navigate(new Uri("/Pages/MainPage.xaml", UriKind.Relative));
-        }
-
         private void OnUpdate(object sender, GameTimerEventArgs e)
         {
-            scene.Update();
-
-            if (particleEffectDelay++ >= 10)
-            {
-                particleEffectDelay = 0;
-                particleManager.CreateParticleEffect(10, new Vector3(random.Next(-400, 400), random.Next(-200, 200), random.Next(0, 0)), random.Next(10), new Color((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()));
-            }
+            scene.Update(e);
         }
 
         private void OnDraw(object sender, GameTimerEventArgs e)

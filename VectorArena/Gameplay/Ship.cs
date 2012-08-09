@@ -11,23 +11,12 @@ namespace VectorArena
     {
         public bool Active;
         public int ID;
-        public int Energy;
         public int FireDelay;
         public const int FireSpeed = 5;
-        public const int FireEnergyCost = 10;
-        public const int MaxEnergy = 1000;
         public int Score;
         public int Multiplier;
-        public GamePage.GameType GameType;
-        public int Lives;
         public TimeSpan Timer;
         public bool GameOver;
-
-        public DroneManager DroneManager;
-        public BulletManager BulletManager;
-        public MultiplierManager MultiplierManager;
-        public ParticleManager ParticleManager;
-        public AudioManager AudioManager;
 
         int respawnDelay;
         List<Vector3> vertices;
@@ -40,7 +29,7 @@ namespace VectorArena
         static Color lightColor = new Color(0.25f, 0.25f, 0.25f, 1.0f);
         static float lightRadius = 50.0f;
 
-        public Ship(Actor parent) : base(parent)
+        public Ship() : base()
         {
             Radius = 15.0f;
 
@@ -55,14 +44,9 @@ namespace VectorArena
             lightPosition = new Vector3(0.0f, 0.0f, -500.0f);
         }
 
-        public void Activate(GamePage.GameType gameType)
+        public void Activate()
         {
             ID = counter++;
-            GameType = gameType;
-            if (GameType == GamePage.GameType.Marathon)
-                Lives = 3;
-            else if (GameType == GamePage.GameType.TimeAttack)
-                Lives = 1;
             FireDelay = 0;
             Score = 0;
             Multiplier = 1;
@@ -78,7 +62,6 @@ namespace VectorArena
                 Velocity = Vector3.Zero;
                 Acceleration = Vector3.Zero;
                 Alive = true;
-                Energy = MaxEnergy;
                 Rotation = 0.0f;
             }
         }
@@ -96,30 +79,17 @@ namespace VectorArena
         {
             if (Alive)
             {
-                if (FireDelay <= 0 && Energy > FireEnergyCost)
+                if (FireDelay <= 0)
                 {
                     velocity.Normalize();
                     float angle = (float)Math.Atan2(velocity.Y, velocity.X);
-                    BulletManager.CreateBullet(ref ship, new Vector2(Position.X, Position.Y) + velocity * Radius * 2, velocity * Bullet.Speed);
-                    BulletManager.CreateBullet(ref ship, new Vector2(Position.X, Position.Y) + velocity * Radius * 2, new Vector2((float)Math.Cos(angle + MathHelper.ToRadians(5.0f)), (float)Math.Sin(angle + MathHelper.ToRadians(5.0f))) * Bullet.Speed);
-                    BulletManager.CreateBullet(ref ship, new Vector2(Position.X, Position.Y) + velocity * Radius * 2, new Vector2((float)Math.Cos(angle - MathHelper.ToRadians(5.0f)), (float)Math.Sin(angle - MathHelper.ToRadians(5.0f))) * Bullet.Speed);
-                    Energy -= Ship.FireEnergyCost;
+                    ((GameplayScene)Scene).BulletManager.SpawnBullet(ref ship, new Vector2(Position.X, Position.Y) + velocity * Radius * 2, velocity * Bullet.Speed);
+                    ((GameplayScene)Scene).BulletManager.SpawnBullet(ref ship, new Vector2(Position.X, Position.Y) + velocity * Radius * 2, new Vector2((float)Math.Cos(angle + MathHelper.ToRadians(5.0f)), (float)Math.Sin(angle + MathHelper.ToRadians(5.0f))) * Bullet.Speed);
+                    ((GameplayScene)Scene).BulletManager.SpawnBullet(ref ship, new Vector2(Position.X, Position.Y) + velocity * Radius * 2, new Vector2((float)Math.Cos(angle - MathHelper.ToRadians(5.0f)), (float)Math.Sin(angle - MathHelper.ToRadians(5.0f))) * Bullet.Speed);
                     FireDelay = Ship.FireSpeed;
 
-                    AudioManager.PlaySound("ClosedHihat", Position, Velocity);
+                    ((GameplayScene)Scene).AudioManager.PlaySound("ClosedHihat", Position, Velocity);
                 }
-            }
-        }
-
-        public void Damage(int damage)
-        {
-            if (Alive)
-            {
-                Energy -= damage;
-                if (Energy <= 0)
-                    Die();
-
-                Energy = Math.Max(Energy, 0);
             }
         }
 
@@ -127,17 +97,15 @@ namespace VectorArena
         {
             Alive = false;
             respawnDelay = 100;
-            if(GameType == GamePage.GameType.Marathon)
-                Lives--;
 
-            DroneManager.KillDrones();
+            ((GameplayScene)Scene).EnemyManager.KillEnemies();
 
-            MultiplierManager.KillMultipliers();
+            ((GameplayScene)Scene).MultiplierManager.KillMultipliers();
 
-            ParticleManager.CreateParticleEffect(50, Position, 20, lineColor);
+            ((GameplayScene)Scene).ParticleManager.CreateParticleEffect(50, Position, 20, lineColor);
         }
 
-        public override void Update()
+        public override void Update(GameTimerEventArgs e)
         {
             if (Alive)
             {
@@ -152,15 +120,6 @@ namespace VectorArena
                 if (Position.Y < -500 || Position.Y > 500)
                     Velocity.Y *= -1;
 
-                if (Energy < 0)
-                {
-                    Die();
-                }
-                else if (Energy < MaxEnergy)
-                {
-                    Energy++;
-                }
-
                 if (FireDelay > 0)
                     FireDelay--;
             }
@@ -170,10 +129,7 @@ namespace VectorArena
 
                 if (respawnDelay <= 0)
                 {
-                    if (Lives > 0)
                         Spawn();
-                    else
-                        GameOver = true;
                 }
             }
         }

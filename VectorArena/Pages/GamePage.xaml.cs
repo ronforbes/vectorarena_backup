@@ -13,45 +13,15 @@ namespace VectorArena
 {
     public partial class GamePage : PhoneApplicationPage
     {
-        public enum GameType
-        {
-            Marathon,
-            TimeAttack
-        }
-
-        enum MessageType
-        {
-            ClientConnecting,
-            ClientConnected,
-            ClientDisconnecting,
-            ClientDisconnected,
-            UpdateShip
-        }
-
-        GameType gameType;
-
         GraphicsDevice graphicsDevice;
-        
         SpriteBatch spriteBatch;
         SpriteFont spriteFont;
-
         ContentManager contentManager;
         GameTimer timer;
-        
-        Scene scene;
-        ShipManager shipManager;
-        BulletManager bulletManager;
-        DroneManager droneManager;
-        MultiplierManager multiplierManager;
-        ParticleManager particleManager;
+        GameplayScene scene;
         AudioManager audioManager;
-        HUD hud;
-        GameClient gameClient;
-        Random random;
-        Timer sendTimer;
-        TimeSpan timeAttackTimer;
-        TimeSpan postGameTimer;
         Settings settings;
+        bool isNewPageInstance = false;
 
         public GamePage()
         {
@@ -67,20 +37,12 @@ namespace VectorArena
             timer.UpdateInterval = TimeSpan.FromTicks(333333);
             timer.Update += OnUpdate;
             timer.Draw += OnDraw;
+
+            isNewPageInstance = true;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            string mode;
-
-            if (NavigationContext.QueryString.TryGetValue("mode", out mode))
-            {
-                if (mode == "marathon")
-                    gameType = GameType.Marathon;
-                else if (mode == "timeattack")
-                    gameType = GameType.TimeAttack;
-            }
-
             // Set the sharing mode of the graphics device to turn on XNA rendering
             SharedGraphicsDeviceManager.Current.GraphicsDevice.SetSharingMode(true);
 
@@ -89,54 +51,36 @@ namespace VectorArena
 
             graphicsDevice.BlendState = BlendState.Additive;
 
-            shipManager = new ShipManager(10);
-            shipManager.ActivateShip(true, gameType);
+            if (isNewPageInstance)
+            {
+                if (scene == null)
+                {
+                    if (State.Count > 0)
+                    {
+                        scene = (GameplayScene)State["Scene"];
+                    }
+                    else
+                    {
+                        audioManager = (Application.Current as App).AudioManager;
+                        
+                        string mode;
 
-            bulletManager = new BulletManager(100);
-            droneManager = new DroneManager(50);
-            multiplierManager = new MultiplierManager(100);
-            particleManager = new ParticleManager(10000);
-            audioManager = (Application.Current as App).AudioManager;
-            hud = new HUD(gameType, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);
-            timeAttackTimer = TimeSpan.FromMinutes(2);
-            postGameTimer = TimeSpan.FromSeconds(3);
+                        if (NavigationContext.QueryString.TryGetValue("mode", out mode))
+                        {
+                            if (mode == "marathon")
+                                scene = new MarathonScene(graphicsDevice, audioManager);
+                            else if (mode == "timeattack")
+                                scene = new TimeAttackScene(graphicsDevice, audioManager);
+                        }                        
+                    }
+                }
 
-            shipManager.Initialize(ref droneManager, ref bulletManager, ref multiplierManager, ref particleManager, ref audioManager);
-            droneManager.Initialize(ref shipManager, ref bulletManager, ref multiplierManager, ref particleManager, ref audioManager);
-            bulletManager.Initialize(ref shipManager, ref droneManager, ref multiplierManager, ref particleManager, ref audioManager);
-            multiplierManager.Initialize(ref shipManager, ref droneManager, ref bulletManager, ref particleManager, ref audioManager);
-            droneManager.ShipManager = shipManager;
-            hud.PlayerShip = shipManager.PlayerShip;
-            hud.TimeAttackTimer = timeAttackTimer;
-
-            scene = new Scene(graphicsDevice);
-            scene.AddActor(new Starfield());
-            scene.AddActor(new Grid());
-            scene.AddActor(shipManager);
-            scene.AddActor(bulletManager);
-            scene.AddActor(droneManager);
-            scene.AddActor(multiplierManager);
-            scene.AddActor(particleManager);
-            scene.AddActor(audioManager);
-            scene.AddActor(hud);
-            scene.AddPostprocess(new Bloom(new SpriteBatch(graphicsDevice), graphicsDevice));
-            scene.Camera.TargetActor = shipManager.PlayerShip;
-
-            scene.LoadContent(contentManager);
-
-            audioManager.TargetListener = shipManager.PlayerShip;
-
-            random = new Random();
+                scene.LoadContent(contentManager);                
+            }
 
             settings = new Settings();
-            audioManager.Stop();
 
-            gameClient = new GameClient("192.168.1.3", 1337);
-            gameClient.Received += new ReceiveEventHandler(OnReceive);
-
-            sendTimer = new Timer(new TimerCallback(OnSend), null, 0, 1000);
-
-            gameClient.Send(MessageType.ClientConnecting.ToString());
+            isNewPageInstance = false;
 
             // Start the timer
             timer.Start();
@@ -152,9 +96,7 @@ namespace VectorArena
             // Set the sharing mode of the graphics device to turn off XNA rendering
             SharedGraphicsDeviceManager.Current.GraphicsDevice.SetSharingMode(false);
 
-            audioManager.Stop();
-
-            gameClient.Send(MessageType.ClientDisconnecting.ToString());
+            scene.OnNavigatedFrom();
 
             base.OnNavigatedFrom(e);
         }
@@ -167,46 +109,13 @@ namespace VectorArena
         {
             VirtualThumbsticks.Update();
 
-            scene.Update();
+            scene.Update(e);
 
-            if (gameType == GameType.TimeAttack)
+            if (scene.EndScene) 
             {
-                if (timeAttackTimer.TotalSeconds > 0)
-                {
-                    timeAttackTimer -= e.ElapsedTime;
-                    hud.TimeAttackTimer = timeAttackTimer;
-                }
-
-                if (timeAttackTimer.TotalSeconds <= 0)
-                {
-                    droneManager.KillDrones();
-                    droneManager.Active = false;
-
-                    postGameTimer -= e.ElapsedTime;
-                }
-                if (postGameTimer.TotalSeconds < 0)
-                    shipManager.PlayerShip.GameOver = true;
-            }
-
-            if (shipManager.PlayerShip.GameOver) 
-            {
-                (Application.Current as App).Score = shipManager.PlayerShip.Score;
+                (Application.Current as App).Score = scene.ShipManager.PlayerShip.Score;
                 NavigationService.Navigate(new Uri("/Pages/GameOverPage.xaml", UriKind.Relative));
             }
-
-            audioManager.PlaySong("ParticleFusion", true);
-        }
-
-        void OnSend(object sender)
-        {
-            //gameClient.Send(MessageType.UpdateShip.ToString() + "," + string.Join(",",
-            //    ship.Position.X, ship.Position.Y,
-            //    ship.Velocity.X, ship.Velocity.Y));
-        }
-
-        void OnReceive(object sender, ReceiveEventArgs e) 
-        { 
-        
         }
 
         /// <summary>
